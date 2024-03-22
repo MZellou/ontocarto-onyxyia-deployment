@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgis-docker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgis-docker
+  template:
+    metadata:
+      labels:
+        app: postgis-docker
+    spec:
+      containers:
+      - name: postgis-docker
+        image: mzellou/ontomap-postgis:1.0.0
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: {{ .Values.postgis.postgresDb }}
+        - name: POSTGRES_USER
+          value: {{ .Values.postgis.postgresUser }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgis-secret
+              key: postgresPassword
+        volumeMounts:
+        - name: data-pgsql
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: data-pgsql
+        persistentVolumeClaim:
+          claimName: data-pgsql-pvc
